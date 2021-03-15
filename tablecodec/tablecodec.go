@@ -73,7 +73,7 @@ func EncodeRowKeyWithHandle(tableID int64, handle int64) kv.Key {
 // t[tableID]_r[handle]
 func DecodeRecordKey(key kv.Key) (tableID int64, handle int64, err error) {
 	/* Your code here */
-	if len(key) < RecordRowKeyLen || key[0] != 't' || string(key[prefixLen-2:prefixLen]) != "_r" {
+	if len(key) < RecordRowKeyLen || key[0] != tablePrefix[0] || string(key[prefixLen-2:prefixLen]) != "_r" {
 		err = errors.New("invalid key")
 	}
 	if err != nil {
