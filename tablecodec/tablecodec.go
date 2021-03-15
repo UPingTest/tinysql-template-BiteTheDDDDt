@@ -71,20 +71,19 @@ func EncodeRowKeyWithHandle(tableID int64, handle int64) kv.Key {
 
 // DecodeRecordKey decodes the key and gets the tableID, handle.
 // t[tableID]_r[handle]
-//go test "c:\Progaming\TinySql\tinysql-template-BiteTheDDDDt\tablecodec\tablecodec.go"
 func DecodeRecordKey(key kv.Key) (tableID int64, handle int64, err error) {
 	/* Your code here */
-	if len(key) < 1+8+2+8 || key[0] != 't' || string(key[1+8:1+8+2]) != "_r" {
+	if len(key) < RecordRowKeyLen || key[0] != 't' || string(key[prefixLen-2:prefixLen]) != "_r" {
 		err = errors.New("invalid key")
 	}
 	if err != nil {
 		return tableID, handle, err
 	}
-	_, handle, err = codec.DecodeInt(key[len(key)-8 : len(key)])
+	_, handle, err = codec.DecodeInt(key[len(key)-idLen : len(key)])
 	if err != nil {
 		return tableID, handle, err
 	}
-	_, tableID, err = codec.DecodeInt(key[1 : len(key)-10])
+	_, tableID, err = codec.DecodeInt(key[1 : len(key)-recordPrefixSepLength-idLen])
 	return tableID, handle, err
 }
 
@@ -109,18 +108,18 @@ func EncodeIndexSeekKey(tableID int64, idxID int64, encodedValue []byte) kv.Key 
 // t[tableID]_i[indexID]encodedValue
 func DecodeIndexKeyPrefix(key kv.Key) (tableID int64, indexID int64, indexValues []byte, err error) {
 	/* Your code here */
-	if len(key) < 1+8+2+8+1 || key[0] != 't' || string(key[1+8:1+8+2]) != "_i" {
+	if len(key) < RecordRowKeyLen+tablePrefixLength || key[0] != 't' || string(key[prefixLen-2:prefixLen]) != "_i" {
 		err = errors.New("invalid key")
 	}
 	if err != nil {
 		return tableID, indexID, indexValues, err
 	}
 	indexValues = key[prefixLen+idLen:]
-	_, indexID, err = codec.DecodeInt(key[len(key)-len(indexValues)-8 : len(key)-len(indexValues)])
+	_, indexID, err = codec.DecodeInt(key[len(key)-len(indexValues)-idLen : len(key)-len(indexValues)])
 	if err != nil {
 		return tableID, indexID, indexValues, err
 	}
-	_, tableID, err = codec.DecodeInt(key[1:9])
+	_, tableID, err = codec.DecodeInt(key[1:1+idLen])
 	if err != nil {
 		return tableID, indexID, indexValues, err
 	}
